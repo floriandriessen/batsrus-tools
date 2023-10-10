@@ -42,6 +42,10 @@ if ($repeat){
 # Time counter for repeat option
 my $time_start = time();
 
+# Prevent repeat counter to terminate at restart of successfull model
+# The $success file is only deleted once BATSRUS (re)starts
+my $startup = 1;
+
 # Concatenate the simulation files from all processors
 # NOTE: for proper functioning of pTEC an additional '/' has to be appended
 REPEAT:{
@@ -49,8 +53,11 @@ REPEAT:{
     chdir $cwd;
     &shell("./pTEC b=${outdir}/");
 
-    # Escape if code finished
-    exit 0 if -e $success;
+    # Escape only if code finished or exceeding of script time
+    exit 0 if -e $success and not $startup;
+    print "$success already exists at startup. Ignoring it for repeat count.\n"
+        if -e $success and $verbose;
+    $startup = 0 if $startup;
 
     if ($repeat){
         exit 0 if (time - $time_start) > $STOP*3600*24;

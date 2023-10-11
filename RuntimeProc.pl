@@ -47,10 +47,10 @@ my $time_start = time();
 my $startup = 1;
 
 # Concatenate the simulation files from all processors
-# NOTE: for proper functioning of pTEC an additional '/' has to be appended
 REPEAT:{
-
     chdir $cwd;
+
+    # NOTE: for proper functioning of pTEC an additional '/' has to be appended
     &shell("./pTEC b=${outdir}/");
 
     # Escape only if code finished or exceeding of script time
@@ -140,8 +140,7 @@ sub find_preplot{
 sub show_help{
     print
 "Purpose:
-   Post-process BATSRUS output files created by each processor relative to the
-   current working directory.
+   Post-process BATSRUS output files created by each processor.
    The pTEC script needs to be included in the current working directory.
 
 Usage:
@@ -153,13 +152,15 @@ Usage:
 
    -p          Preplot .dat files in the output directory.
 
-   -g          Archive and compress all .dat files into a gzipped tarball.
+   -g          Archive and compress all .dat files into a gzipped tarball in
+               the output directory.
 
-   -k          Delete all .dat files after processing them.
+   -k          Delete all .dat files in the output directory.
 
-   -n=NAME     Specify NAME for targzped tarball. Default ALL-DATFILES.tar.gz.
+   -n=NAME     Specify NAME for gzipped tarball in the output directory.
+               Default ALL-DATFILES.tar.gz.
 
-   -r=REPEAT   Repeat post processing every REPEAT seconds.
+   -r=REPEAT   Repeat post-processing every REPEAT seconds.
 
    -d=DIRNAME  Specify the directory DIRNAME containing the .dat files relative
                to the current working directory.

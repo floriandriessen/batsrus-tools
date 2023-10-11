@@ -133,6 +133,7 @@ sub find_preplot{
         $preplot_found = 1;
     }else{
         print "--- Preplot binary not found in PATH! Ignoring '-p' flag\n";
+        `rm -f $dump`;
     }
 }
 

@@ -54,13 +54,13 @@ REPEAT:{
     &shell("./pTEC b=${outdir}/");
 
     # Escape only if code finished or exceeding of script time
-    exit 0 if -e $success and not $startup;
+    last REPEAT if -e $success and not $startup;
     print "$success already exists at startup. Ignoring it for repeat count.\n"
         if -e $success and $verbose;
     $startup = 0 if $startup;
 
     if ($repeat){
-        exit 0 if (time - $time_start) > $STOP*3600*24;
+        last REPEAT if (time - $time_start) > $STOP*3600*24;
         sleep $repeat;
         redo REPEAT;
     }
@@ -160,7 +160,7 @@ Usage:
    -n=NAME     Specify NAME for gzipped tarball in the output directory.
                Default ALL-DATFILES.tar.gz.
 
-   -r=REPEAT   Repeat post-processing every REPEAT seconds.
+   -r=REPEAT   Repeat post-processing of .dat files every REPEAT seconds.
 
    -d=DIRNAME  Specify the directory DIRNAME containing the .dat files relative
                to the current working directory.

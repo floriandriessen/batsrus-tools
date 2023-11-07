@@ -22,9 +22,11 @@ my $success = "BATSRUS.SUCCESS";
 my $restart_tree = $savedir;
 
 # Remove trailing '/' of name if user included it
-$restart_tree =~ s/\/+$//;
+$restart_tree =~ s/\/+$// if $savedir;
 
+# Set time and iteration dummy to nonsense value
 my $istep = -1;
+my $itime = -1;
 
 if ($help){
     print
@@ -43,7 +45,8 @@ Usage:
 
    -d=DIRNAME  Specify the directory DIRNAME to save the restart files into. It
                will be prepared as GM/DIRNAME.
-               Default is GM/RESTART-it[NSTEP] with [NSTEP] the iteration step.
+               Default is GM/RESTART-t[TIME]-it[NSTEP] with [TIME] and [NSTEP]
+               the simulation time (in sec) and iteration step.
 
 Examples:
 
@@ -74,7 +77,7 @@ while ( <HEADERFILE> ){
     print NHFILE unless m/IDEALAXES/;
 
     if (/\#NSTEP/){
-        # Read in number of steps and extract them
+        # Read in number of steps and extract
         $istep = <HEADERFILE>;
         print NHFILE $istep; # force line to be written to file
         chop($istep);
@@ -86,13 +89,27 @@ while ( <HEADERFILE> ){
         # Convert string to number
         $istep += 0;
     }
+
+    if (/\#TIMESIMULATION/){
+        # Read in simulation time and extract
+        $itime = <HEADERFILE>;
+        print NHFILE $itime;
+        chop($itime);
+
+        $itime =~ s/^\s+//;
+        $itime =~ s/\s.*//;
+        $itime += 0;
+    }
 }
 
 close NHFILE;
 close HEADERFILE;
 
+die "$ERROR: cannot find simulation time in $headfile!\n" if $itime < 0;
 die "$ERROR: cannot find iteration step in $headfile!\n" if $istep < 0;
-print "$INFO: read it = $istep from $headfile\n" if $verbose;
+
+print "$INFO: read simulation time = $itime and it = $istep from $headfile\n"
+    if $verbose;
 rename "$restart_outdir/$headfile_tmp", "$restart_outdir/$headfile";
 
 &make_restartdir;
@@ -108,7 +125,7 @@ sub make_restartdir{
 
     unless ($savedir){
         # Append iteration number to default directory name
-        $restart_tree = sprintf "RESTART-it%6d", $istep;
+        $restart_tree = sprintf("RESTART-t%9.4f-it%6d", $itime, $istep);
 
         # Replace spaces with zeros
         $restart_tree =~ s/ /0/g;
@@ -141,19 +158,19 @@ sub make_restartdir{
 }
 
 sub link_restartdir{
-	# When directory already exists overwrite it with new link
-	if ( -l $restart_indir ){
-	    print "rm -f $restart_indir\n" if $verbose;
-	    unlink $restart_indir
-          or die "$ERROR: cannot remove link $restart_indir!\n";
-	}elsif ( -d $restart_indir ){
-	    print "rmdir $restart_indir\n" if $verbose;
-	    rmdir $restart_indir
-          or die "$ERROR: cannot remove directory $restart_indir!\n";
-	}
+    # When directory already exists overwrite it with new link
+    if ( -l $restart_indir ){
+        print "rm -f $restart_indir\n" if $verbose;
+        unlink $restart_indir
+            or die "$ERROR: cannot remove link $restart_indir!\n";
+    }elsif ( -d $restart_indir ){
+        print "rmdir $restart_indir\n" if $verbose;
+        rmdir $restart_indir
+            or die "$ERROR: cannot remove directory $restart_indir!\n";
+    }
 
-	# Link restart tree with the input restart directory
-	print "ln -s $restart_indir $restart_tree\n" if $verbose;
-	symlink $restart_tree, $restart_indir or
-	    die "$ERROR: cannot link $restart_tree to $restart_indir!\n";
+    # Link restart tree with the input restart directory
+    print "ln -s $restart_indir $restart_tree\n" if $verbose;
+    symlink $restart_tree, $restart_indir or
+        die "$ERROR: cannot link $restart_tree to $restart_indir!\n";
 }

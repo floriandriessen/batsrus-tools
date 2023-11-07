@@ -20,6 +20,10 @@ my $headfile = "restart.H";
 my $headfile_tmp = "restart_tmp.H";
 my $success = "BATSRUS.SUCCESS";
 my $restart_tree = $savedir;
+
+# Remove trailing '/' of name if user included it
+$restart_tree =~ s/\/+$//;
+
 my $istep = -1;
 
 if ($help){

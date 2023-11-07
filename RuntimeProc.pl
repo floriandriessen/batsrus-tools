@@ -32,6 +32,9 @@ die "$ERROR: the pTEC script is not in run directory: $cwd\n"
 
 # Overwrite the path to the output directory if needed
 $outdir = "$cwd" . "/" . "$dir" if $dir;
+
+# Remove trailing '/' of name if user included it
+$outdir =~ s/\/+$//;
 print "Output directory is at $outdir\n" if $verbose;
 
 if ($repeat){

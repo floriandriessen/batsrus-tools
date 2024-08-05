@@ -29,6 +29,7 @@ $restart_tree =~ s/\/+$// if $savedir;
 # Set time and iteration dummy to nonsense value
 my $istep = -1;
 my $itime = -1;
+my $time_accurate_mode = -1;
 
 &show_help if ($help);
 
@@ -77,6 +78,7 @@ while ( <HEADERFILE> ){
         $itime =~ s/\s.*//;
         $itime += 0;
     }
+    $time_accurate_mode = $itime;
 }
 
 close NHFILE;
@@ -101,8 +103,12 @@ exit 0;
 sub make_restartdir{
 
     unless ($savedir){
-        # Append iteration number to default directory name
-        $restart_tree = sprintf("RESTART-t%9.4f-it%6d", $itime, $istep);
+        # Append time and/or iteration number to default directory name
+        if ($time_accurate_mode){
+            $restart_tree = sprintf("RESTART-t%9.4f-it%6d", $itime, $istep);
+        }else{
+            $restart_tree = sprintf("RESTART-it%6d", $istep);
+        }
 
         # Replace spaces with zeros
         $restart_tree =~ s/ /0/g;

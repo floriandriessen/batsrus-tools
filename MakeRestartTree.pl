@@ -2,8 +2,10 @@
 
 my $help    = $h;
 my $verbose = $v;
-my $savedir = $d;
+my $savedir = $s;
 my $link    = $l;
+my $treedir = $t;
+my $force   = $f;
 
 use strict;
 use warnings;
@@ -28,44 +30,19 @@ $restart_tree =~ s/\/+$// if $savedir;
 my $istep = -1;
 my $itime = -1;
 
-if ($help){
-    print
-"Purpose:
-   Make a restart tree from a BATSRUS simulation in the working directory and
-   link it.
-
-Usage:
-   MakeRestartTree.pl [-h] [-v] [-l] [-d=DIRNAME]
-
-   -h          Print help message and exit.
-
-   -v          Print verbose info to screen.
-
-   -l          Link restart tree to restartIN.
-
-   -d=DIRNAME  Specify the directory DIRNAME to save the restart files into. It
-               will be prepared as GM/DIRNAME.
-               Default is GM/RESTART-t[TIME]-it[NSTEP] with [TIME] and [NSTEP]
-               the simulation time (in sec) and iteration step.
-
-Examples:
-
-Create restart tree from model with output located in GM/restartOUT and link
-it to the input restart directory 'restartIN':
-
-  MakeRestartTree.pl -l
-
-Create restart tree from model with output located in GM/restartOUT, put it in
-a directory 'restart-isolated' inside GM, and print verbose info:
-
-  MakeRestartTree.pl -v -d=restart-isolated
-"
-    ,"\n\n";
-    exit;
-}
+&show_help if ($help);
 
 # Sanity check
-die "$ERROR: BATSRUS did not finish successfully\n" unless -e $success;
+die "$ERROR: BATSRUS did not finish successfully\n" unless -e $success
+    or $force;
+die "$ERROR: -t flag only works with -l flag\n" if ($treedir and not $link);
+
+if ($treedir){
+    print "$INFO: linking existing $treedir to $restart_indir\n" if $verbose;
+    $restart_tree = $treedir;
+    &link_restartdir;
+    exit 0;
+}
 
 # Open the header file, get iteration step, and clean file by writing to new
 open (HEADERFILE, "$restart_outdir/$headfile")
@@ -173,4 +150,44 @@ sub link_restartdir{
     print "ln -s $restart_indir $restart_tree\n" if $verbose;
     symlink $restart_tree, $restart_indir or
         die "$ERROR: cannot link $restart_tree to $restart_indir!\n";
+}
+
+sub show_help{
+    print
+"Purpose:
+   Make a restart tree from a BATSRUS simulation in the working directory and
+   link it.
+
+Usage:
+   MakeRestartTree.pl [-h] [-v] [-l] [-t=DIRNAME] [-s=DIRNAME]
+
+   -h          Print help message and exit.
+
+   -v          Print verbose info to screen.
+
+   -l          Link restart tree to restartIN.
+
+   -f          Force script to run even if BATSRUSS.SUCCESS is not present.
+
+   -t=DIRNAME  Specify an existing restart tree DIRNAME to link with restartIN.
+
+   -s=DIRNAME  Specify the directory DIRNAME to save the restart files into. It
+               will be prepared as GM/DIRNAME.
+               Default is GM/RESTART-t[TIME]-it[NSTEP] with [TIME] and [NSTEP]
+               the simulation time (in sec) and iteration step.
+
+Examples:
+
+Create restart tree from model with output located in GM/restartOUT and link
+it to the input restart directory 'restartIN':
+
+  MakeRestartTree.pl -l
+
+Create restart tree from model with output located in GM/restartOUT, put it in
+a directory 'restart-isolated' inside GM, and print verbose info:
+
+  MakeRestartTree.pl -v -s=restart-isolated
+"
+    ,"\n\n";
+    exit;
 }
